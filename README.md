@@ -7,26 +7,26 @@ A demo to show the model of producer and consumer in multi-thread programming, w
 
 ## 工具
 * 实现的语言是C++.
-    - 线程用的C++11提供的thread库,
-    - 互斥锁mutex,
-    - 条件变量condition_variable,
-    - 队列queue,
-    - 原子操作atomic.
+    - 线程用的C++11提供的thread库,
+    - 互斥锁mutex,
+    - 条件变量condition_variable,
+    - 队列queue,
+    - 原子操作atomic.
 * 开发环境是Visual Studio 2013
 
 ## 实现细节
 * 具体的实现逻辑是构建一个queue来存储生产的数据，queue不满时可以生产，不空时可以消费。
 * 对于这个队列，采用阻塞队列的实现思路。
 * 先实现构造函数，初始化一个unique_lock供condition_variable使用。
-    - 如何在类里面使用unique_lock等需要初始化，并且初始化会加锁的对象。这要研究下。我的理解是构造列表初始化，然后函数体里unlock。
-    - 对于条件变量，申请两个，分别控制consumer和producer。
+    - 如何在类里面使用unique_lock等需要初始化，并且初始化会加锁的对象。这要研究下。我的理解是构造列表初始化，然后函数体里unlock。
+    - 对于条件变量，申请两个，分别控制consumer和producer。
 * 然后就是入和出队列的细节。
-    - 首先加锁。
-    - 循环判断一下目前的队列情况，对于各自的特殊情况（队满和队空）进行处理。
-    - 唤醒一个线程来处理特殊情况。
-    - 等待处理完毕。
-    - 处理入和出队列操作。
-    - 最后释放锁。
+    - 首先加锁。
+    - 循环判断一下目前的队列情况，对于各自的特殊情况（队满和队空）进行处理。
+    - 唤醒一个线程来处理特殊情况。
+    - 等待处理完毕。
+    - 处理入和出队列操作。
+    - 最后释放锁。
 
 ## 问题
 1. 对于多线程很多细节不是很理解。
