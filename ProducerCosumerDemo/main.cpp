@@ -16,11 +16,11 @@ void consumer(CBlockQueue* bq) {
 	while (!bq->stopped() || !bq->empty()) {
 		int data;
 		bq->pop(data);
-		cout << "data comsumed done: " << data << ", trhead id: " << thread::id::id() << "\n";
+		cout << "data comsumed done: " << data << ", trhead id: " << this_thread::get_id() << "\n";
 		//sleep(0.5);
 	}
 
-	cout << "consumer " << thread::id::id() << " is done.\n";
+	cout << "consumer " << this_thread::get_id() << " is done.\n";
 }
 
 void producer(CBlockQueue* bq) {
@@ -36,19 +36,24 @@ void producer(CBlockQueue* bq) {
 	}
 
 	bq->stop();
-	cout << "producer " << thread::id::id() << " is done.\n";
+	cout << "producer " << this_thread::get_id() << " is done.\n";
 }
 
 int main() {
 	CBlockQueue bqueue;
 
 	thread th_prod(producer, &bqueue);
-	thread th_con0(consumer, &bqueue);
-	thread th_con1(consumer, &bqueue);
+
+	vector<thread> th_cons;
+	const int nums = 2;
+	for (int i = 0; i < nums; i++) {
+		th_cons.emplace_back(consumer, &bqueue);
+	}
 
 	th_prod.join();
-	th_con0.join();
-	th_con1.join();
+	for (auto& t : th_cons) {
+		t.join();
+	}
 
 	return 0;
 }

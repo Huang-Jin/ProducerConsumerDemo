@@ -43,6 +43,7 @@ public:
 
 	void stop() {
 		_stopped.store(true);
+		_cv_con.notify_all();
 	}
 
 	bool stopped() {
@@ -59,7 +60,10 @@ CBlockQueue::CBlockQueue() : _capacity(TASK_NUM), _lock(_mutex), _stopped(false)
 }
 
 CBlockQueue::~CBlockQueue() {
-	if(_lock.owns_lock()) _lock.unlock();
+	//if(_lock.owns_lock()) _lock.unlock();
+	stop();
+	_cv_con.notify_all();
+	_cv_prod.notify_all();
 }
 
 void CBlockQueue::push(const int & data) {
@@ -78,9 +82,14 @@ void CBlockQueue::push(const int & data) {
 void CBlockQueue::pop(int & data) {
 	lockQueue();
 	while (empty()) {
+		if (this->stopped()) {
+			unlockQueue();
+			return;
+		}
 		_cv_prod.notify_one();
 		cout << "Task Queue is empty, notify one producer...\n";
-		_cv_con.wait(_lock);
+		_cv_con.wait(_lock, [this]() { return this->stopped() || !this->empty(); });
+		//_cv_con.wait(_lock);
 	}
 
 	data = _tasks.front();
