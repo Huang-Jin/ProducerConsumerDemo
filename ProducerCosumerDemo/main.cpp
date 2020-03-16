@@ -28,12 +28,12 @@ void consumer(CBlockQueue* bq) {
 	cout << "<" << this_thread::get_id() << ">: " << "consumer is done.\n";
 }
 
-void producer(CBlockQueue* bq, int start, int maxNum) {
+void producer(CBlockQueue* bq, int start, int num) {
 	//CBlockQueue* bq = static_cast<CBlockQueue*>(arg);
 	//unique_lock<mutex> lck(mt_prod);
 
 	int i = 0;
-	while (i++ < maxNum) {
+	while (i++ < num) {
 		//int data = rand() % 1024;
 		int data = i + start;
 		bq->push(data);
@@ -54,7 +54,7 @@ int main() {
 	vector<thread> th_prods;
 	const int num_prod = 3;
 	for (int i = 0; i < num_prod; i++) {
-		th_prods.emplace_back(producer, &bqueue, i * 100, num_prod * 100);
+		th_prods.emplace_back(producer, &bqueue, i * 100, 100);
 	}
 
 	vector<thread> th_cons;
