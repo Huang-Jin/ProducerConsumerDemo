@@ -10,10 +10,12 @@
 #include <unistd.h>
 #endif
 
+mutex mt_prod;
+
 void consumer(CBlockQueue* bq) {
 	//CBlockQueue* bq = static_cast<CBlockQueue*>(arg);
 
-	while (!bq->stopped() || !bq->empty()) {
+	while (bq->available()) {
 		int data;
 		bq->pop(data);
 		cout << "data comsumed done: " << data << ", trhead id: " << this_thread::get_id() << "\n";
@@ -23,15 +25,14 @@ void consumer(CBlockQueue* bq) {
 	cout << "consumer " << this_thread::get_id() << " is done.\n";
 }
 
-void producer(CBlockQueue* bq) {
+void producer(CBlockQueue* bq, int start, int maxNum) {
 	//CBlockQueue* bq = static_cast<CBlockQueue*>(arg);
+	//unique_lock<mutex> lck(mt_prod);
 
-	int i = 0;
-	while (i++ < 100) {
+	while (start++ < maxNum) {
 		//int data = rand() % 1024;
-		int data = i;
-		bq->push(data);
-		cout << "data produced done: " << data << "\n";
+		bq->push(start);
+		cout << "data produced done: " << start << "\n";
 		//sleep(0.2);
 	}
 
@@ -42,7 +43,7 @@ void producer(CBlockQueue* bq) {
 int main() {
 	CBlockQueue bqueue;
 
-	thread th_prod(producer, &bqueue);
+	thread th_prod(producer, &bqueue, 0, 100);
 
 	vector<thread> th_cons;
 	const int nums = 2;
