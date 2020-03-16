@@ -64,7 +64,7 @@ void CBlockQueue::push(const int & data) {
 	unique_lock<mutex> _lck(_mt);
 	while (full()) {
 		_cv_con.notify_one();
-		cout << "Task Queue is full, notify one consumer...\n";
+		//cout << "Task Queue is full, notify one consumer...\n";
 		_cv_prod.wait(_lck);
 	}
 
@@ -78,7 +78,7 @@ void CBlockQueue::pop(int & data) {
 		if (this->stopped()) return;
 
 		_cv_prod.notify_one();
-		cout << "Task Queue is empty, notify one producer...\n";
+		//cout << "Task Queue is empty, notify one producer...\n";
 		_cv_con.wait(_lck, [this]() { return this->stopped() || !this->empty(); });
 	}
 

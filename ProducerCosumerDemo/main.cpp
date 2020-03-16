@@ -10,7 +10,8 @@
 #include <unistd.h>
 #endif
 
-mutex mt_prod;
+CRITICAL_SECTION cs;
+//mutex mt_prod;
 
 void consumer(CBlockQueue* bq) {
 	//CBlockQueue* bq = static_cast<CBlockQueue*>(arg);
@@ -18,43 +19,58 @@ void consumer(CBlockQueue* bq) {
 	while (bq->available()) {
 		int data = -1;
 		bq->pop(data);
-		cout << "data comsumed done: " << data << ", trhead id: " << this_thread::get_id() << "\n";
+		EnterCriticalSection(&cs);
+		cout << "<" << this_thread::get_id() << ">: " << data << " comsumed.\n";
+		LeaveCriticalSection(&cs);
 		//sleep(0.5);
 	}
 
-	cout << "consumer " << this_thread::get_id() << " is done.\n";
+	cout << "<" << this_thread::get_id() << ">: " << "consumer is done.\n";
 }
 
 void producer(CBlockQueue* bq, int start, int maxNum) {
 	//CBlockQueue* bq = static_cast<CBlockQueue*>(arg);
 	//unique_lock<mutex> lck(mt_prod);
 
-	while (start++ < maxNum) {
+	int i = 0;
+	while (i++ < 100) {
 		//int data = rand() % 1024;
-		bq->push(start);
-		cout << "data produced done: " << start << "\n";
+		int data = i + start;
+		bq->push(data);
+		EnterCriticalSection(&cs);
+		cout << "[" << this_thread::get_id() << "]: " << data << " produced.\n";
+		LeaveCriticalSection(&cs);
 		//sleep(0.2);
 	}
 
-	bq->stop();
-	cout << "producer " << this_thread::get_id() << " is done.\n";
+	//if(start + i >= maxNum) bq->stop();
+	cout << "[" << this_thread::get_id() << "]: " << "producer is done.\n";
 }
 
 int main() {
 	CBlockQueue bqueue;
+	InitializeCriticalSection(&cs);
 
-	thread th_prod(producer, &bqueue, 0, 100);
+	vector<thread> th_prods;
+	const int num_prod = 3;
+	for (int i = 0; i < num_prod; i++) {
+		th_prods.emplace_back(producer, &bqueue, i * 100, num_prod * 100);
+	}
 
 	vector<thread> th_cons;
-	const int nums = 5;
-	for (int i = 0; i < nums; i++) {
+	const int num_con = 3;
+	for (int i = 0; i < num_con; i++) {
 		th_cons.emplace_back(consumer, &bqueue);
 	}
 
-	th_prod.join();
+	for (auto& t : th_prods) {
+		t.join();
+	}
+	bqueue.stop();
 	for (auto& t : th_cons) {
 		t.join();
 	}
 
+	DeleteCriticalSection(&cs);
 	return 0;
 }
