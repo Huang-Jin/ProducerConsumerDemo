@@ -33,7 +33,7 @@ void producer(CBlockQueue* bq, int start, int maxNum) {
 	//unique_lock<mutex> lck(mt_prod);
 
 	int i = 0;
-	while (i++ < 100) {
+	while (i++ < maxNum) {
 		//int data = rand() % 1024;
 		int data = i + start;
 		bq->push(data);
